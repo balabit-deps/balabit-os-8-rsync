@@ -1,0 +1,16 @@
+Fix --prealloc to keep file-size 0 when possible
+https://git.samba.org/?p=rsync.git;a=commitdiff;h=c2da3809f714d936dec1cab6d5bf8b724b9cd113
+
+Index: rsync/syscall.c
+===================================================================
+--- rsync.orig/syscall.c
++++ rsync/syscall.c
+@@ -467,7 +467,7 @@ int do_utime(const char *fname, time_t m
+ 
+ OFF_T do_fallocate(int fd, OFF_T offset, OFF_T length)
+ {
+-	int opts = inplace || preallocate_files ? 0 : DO_FALLOC_OPTIONS;
++	int opts = inplace || preallocate_files ? DO_FALLOC_OPTIONS : 0;
+ 	int ret;
+ 	RETURN_ERROR_IF(dry_run, 0);
+ 	RETURN_ERROR_IF_RO_OR_LO;

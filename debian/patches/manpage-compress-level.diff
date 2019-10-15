@@ -1,0 +1,15 @@
+Index: rsync/rsync.yo
+===================================================================
+--- rsync.orig/rsync.yo
++++ rsync/rsync.yo
+@@ -1970,7 +1970,9 @@ See the bf(--skip-compress) option for t
+ that will not be compressed.
+ 
+ dit(bf(--compress-level=NUM)) Explicitly set the compression level to use
+-(see bf(--compress)) instead of letting it default.  If NUM is non-zero,
++(see bf(--compress)) instead of letting it default.  Allowed values for NUM
++are between 0 and 9; default when bf(--compress) option is specified is 6.
++If NUM is non-zero,
+ the bf(--compress) option is implied.
+ 
+ dit(bf(--skip-compress=LIST)) Override the list of file suffixes that will

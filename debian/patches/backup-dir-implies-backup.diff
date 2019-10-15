@@ -1,0 +1,25 @@
+Index: rsync/options.c
+===================================================================
+--- rsync.orig/options.c
++++ rsync/options.c
+@@ -2157,6 +2157,7 @@ int parse_arguments(int *argc_p, const c
+ 	}
+ 	if (backup_dir) {
+ 		size_t len;
++		make_backups = 1; /* --backup-dir implies --backup */
+ 		while (*backup_dir == '.' && backup_dir[1] == '/')
+ 			backup_dir += 2;
+ 		if (*backup_dir == '.' && backup_dir[1] == '\0')
+Index: rsync/rsync.yo
+===================================================================
+--- rsync.orig/rsync.yo
++++ rsync/rsync.yo
+@@ -792,7 +792,7 @@ in the list so that it has a high enough
+ your rules specify a trailing inclusion/exclusion of '*', the auto-added
+ rule would never be reached).
+ 
+-dit(bf(--backup-dir=DIR)) In combination with the bf(--backup) option, this
++dit(bf(--backup-dir=DIR)) This implies the bf(--backup) option, and
+ tells rsync to store all backups in the specified directory on the receiving
+ side.  This can be used for incremental backups.  You can additionally
+ specify a backup suffix using the bf(--suffix) option

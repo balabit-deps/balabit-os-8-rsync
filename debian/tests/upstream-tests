@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+# Create needed files for tests
+./prepare-source build
+./configure.sh
+
+# Supress gcc warnings (autopkg treats them as failures)
+make tls getgroups getfsdev trimslash t_unsafe wildtest testrun 2>/dev/null
+
+# Run tests
+rsync_bin="/usr/bin/rsync" ./runtests.sh

@@ -1,0 +1,13 @@
+Index: rsync/support/rsyncstats
+===================================================================
+--- rsync.orig/support/rsyncstats
++++ rsync/support/rsyncstats
+@@ -12,7 +12,7 @@
+ use Getopt::Long;
+ 
+ # You may wish to edit the next line to customize for your default log file.
+-$usage_file = "/var/log/rsyncd.log";
++$usage_file = "/var/log/rsyncd";
+ 
+ # Edit the following lines for default report settings.
+ # Entries defined here will be over-ridden by the command line.

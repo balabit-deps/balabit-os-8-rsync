@@ -1,0 +1,15 @@
+CVE-2016-9840.patch
+CVE-2016-9841.patch
+CVE-2016-9842.patch
+CVE-2016-9843.patch
+Two-spelling-mistakes-in-rsync.yo.diff
+backup-dir-implies-backup.diff
+copy-devices.diff
+logdir.diff
+manpage-compress-level.diff
+noatime.diff
+prealloc-fix.diff
+ssh-6-option.diff
+systemd-unit.diff
+time-limit.diff
+disable_reconfigure_req.diff
