@@ -13,3 +13,4 @@ ssh-6-option.diff
 systemd-unit.diff
 time-limit.diff
 disable_reconfigure_req.diff
+allow-missing-parent-dir-delete-missing-args.patch

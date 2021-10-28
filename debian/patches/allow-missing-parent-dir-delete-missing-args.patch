@@ -1,0 +1,51 @@
+Description: Allow a missing parent dir when --delete-missing-args is specified
+Author: Wayne Davison <wayne@opencoder.net>
+Origin: upstream https://github.com/WayneD/rsync/commit/af6118d98b3482cbcfc223bf2a0777bc19eccb02
+Bug: https://bugzilla.samba.org/show_bug.cgi?id=12569
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/focal/+source/rsync/+bug/1896251
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=863334
+Bug-RHEL: https://bugzilla.redhat.com/show_bug.cgi?id=1727093
+Last-Update: 2021-10-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/generator.c
++++ b/generator.c
+@@ -1272,10 +1272,16 @@
+ 			 && (*dn != '.' || dn[1]) /* Avoid an issue with --relative and the "." dir. */
+ 			 && (!prior_dir_file || strcmp(dn, f_name(prior_dir_file, NULL)) != 0)
+ 			 && flist_find_name(cur_flist, dn, 1) < 0) {
+-				rprintf(FERROR,
+-					"ABORTING due to invalid path from sender: %s/%s\n",
+-					dn, file->basename);
+-				exit_cleanup(RERR_PROTOCOL);
++				  /* The --delete-missing-args option can actually put invalid entries into
++				  * the file list, so if that option was specified, we'll just complain about
++				  * it and allow it. */
++				  if (missing_args == 2 && file->mode == 0)
++					  rprintf(FERROR, "WARNING: parent dir is absent in the file list: %s\n", dn);
++				  else {
++					  rprintf(FERROR, "ABORTING due to invalid path from sender: %s/%s\n",
++						  dn, file->basename);
++					  exit_cleanup(RERR_PROTOCOL);
++				  }
+ 			}
+ 			if (relative_paths && !implied_dirs
+ 			 && do_stat(dn, &sx.st) < 0) {
+@@ -1378,7 +1384,7 @@
+ 			added_perms = 0;
+ 		if (is_dir < 0) {
+ 			if (!(preserve_times & PRESERVE_DIR_TIMES))
+-				return;
++				goto cleanup;
+ 			/* In inc_recurse mode we want to make sure any missing
+ 			 * directories get created while we're still processing
+ 			 * the parent dir (which allows us to touch the parent
+@@ -1520,7 +1526,7 @@
+ 					"ignoring unsafe symlink \"%s\" -> \"%s\"\n",
+ 					fname, sl);
+ 			}
+-			return;
++			goto cleanup;
+ 		}
+ 		if (statret == 0) {
+ 			char lnk[MAXPATHLEN];

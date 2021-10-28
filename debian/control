@@ -1,7 +1,8 @@
 Source: rsync
 Section: net
 Priority: optional
-Maintainer: Paul Slootman <paul@debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Paul Slootman <paul@debian.org>
 Uploaders: Samuel Henrique <samueloph@debian.org>
 Build-Depends: debhelper-compat (= 12),
                libacl1-dev,
