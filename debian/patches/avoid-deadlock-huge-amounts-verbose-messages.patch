@@ -1,0 +1,44 @@
+Description: Avoid a deadlock due to huge amounts of verbose messages.
+ Allow the receiver to increase their iobuf.msg xbuf if it fills up.
+ This ensures that the receiver will never block trying to output a
+ message, and thus it will always drain the data from the sender and
+ keep the whole thing from clogging up.
+Author: Wayne Davison <wayne@opencoder.net>
+Origin: upstream, https://github.com/WayneD/rsync
+Bug: https://bugzilla.samba.org/show_bug.cgi?id=11166
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rsync/+bug/1528921
+Forwarded: not-needed
+Applied-Upstream: https://github.com/WayneD/rsync/commit/01b9bbb0f94e4ddd4b1e3ad678b220ca09bc0ad0
+Last-Update: 2022-02-07
+---
+--- a/io.c
++++ b/io.c
+@@ -963,8 +963,17 @@
+ 	} else
+ #endif
+ 		needed = len + 4 + 3;
+-	if (iobuf.msg.len + needed > iobuf.msg.size)
+-		perform_io(needed, PIO_NEED_MSGROOM);
++	if (iobuf.msg.len + needed > iobuf.msg.size) {
++		if (!am_receiver)
++			perform_io(needed, PIO_NEED_MSGROOM);
++		else { /* We allow the receiver to increase their iobuf.msg size to avoid a deadlock. */
++			size_t old_size = iobuf.msg.size;
++			restore_iobuf_size(&iobuf.msg);
++			realloc_xbuf(&iobuf.msg, iobuf.msg.size * 2);
++			if (iobuf.msg.pos + iobuf.msg.len > old_size)
++				memcpy(iobuf.msg.buf + old_size, iobuf.msg.buf, iobuf.msg.pos + iobuf.msg.len - old_size);
++		}
++	}
+ 
+ 	pos = iobuf.msg.pos + iobuf.msg.len; /* Must be set after any flushing. */
+ 	if (pos >= iobuf.msg.size)
+@@ -1185,7 +1194,7 @@ int read_line(int fd, char *buf, size_t
+ 
+ #ifdef ICONV_OPTION
+ 	if (flags & RL_CONVERT && iconv_buf.size < bufsiz)
+-		realloc_xbuf(&iconv_buf, bufsiz + 1024);
++		realloc_xbuf(&iconv_buf, ROUND_UP_1024(bufsiz) + 1024);
+ #endif
+ 
+   start:
