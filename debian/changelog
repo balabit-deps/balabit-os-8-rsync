@@ -1,3 +1,15 @@
+rsync (3.1.3-8ubuntu0.3) focal-security; urgency=medium
+
+  * SECURITY UPDATE: memory corruption when zlib deflating
+    - debian/patches/CVE-2018-25032-1.patch: fix a bug that can crash
+      deflate on some input when using Z_FIXED in zlib/deflate.c,
+      zlib/deflate.h.
+    - debian/patches/CVE-2018-25032-2.patch: assure that the number of bits
+      for deflatePrime() is valid in zlib/deflate.c.
+    - CVE-2018-25032
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Wed, 30 Mar 2022 14:02:52 -0400
+
 rsync (3.1.3-8ubuntu0.2) focal; urgency=medium
 
   * d/p/avoid-deadlock-huge-amounts-verbose-messages.patch:

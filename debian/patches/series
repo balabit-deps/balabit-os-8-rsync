@@ -15,3 +15,5 @@ time-limit.diff
 disable_reconfigure_req.diff
 allow-missing-parent-dir-delete-missing-args.patch
 avoid-deadlock-huge-amounts-verbose-messages.patch
+CVE-2018-25032-1.patch
+CVE-2018-25032-2.patch
