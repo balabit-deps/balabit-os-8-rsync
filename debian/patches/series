@@ -19,3 +19,6 @@ CVE-2018-25032-1.patch
 CVE-2018-25032-2.patch
 CVE-2022-37434-part1.patch
 CVE-2022-37434-part2.patch
+CVE-2022-29154-1.patch
+CVE-2022-29154-2.patch
+avoid_quoting_of_tilde_when_its_a_destination_arg.patch
