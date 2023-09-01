@@ -1,0 +1,91 @@
+Description: Add manpage and help documentation for the --trust-sender option
+ This is a heavily modified version of the documentation portion of the rsync
+ upstream commit https://github.com/WayneD/rsync/commit/cff8f044776c5143a5b270.
+ It had to be converted from markdown into the file rsync.1, as the original
+ --trust-sender option addition happened after the change to rsync.1.md. This
+ patch also adds the small --trust-sender description in rsync.yo and options.c
+ so that it shows up when running rsync --help.
+Author: Lena Voytek <lena.voytek@canonical.com>
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rsync/+bug/2028810
+Last-Update: 2023-09-01
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/rsync.1
++++ b/rsync.1
+@@ -517,6 +517,7 @@
+  \-0, \-\-from0                 all *from/filter files are delimited by 0s
+      \-\-old\-args              disable the modern arg-protection idiom
+  \-s, \-\-protect\-args          no space\-splitting; wildcard chars only
++     \-\-trust\-sender         trust the remote sender's file list
+      \-\-address=ADDRESS       bind address for outgoing socket to daemon
+      \-\-port=PORT             specify double\-colon alternate port number
+      \-\-sockopts=OPTIONS      specify custom TCP options
+@@ -2104,6 +2105,48 @@
+ .IP
+ Note that this option is incompatible with the use of the restricted rsync
+ script (`rrsync`) since it hides options from the script's inspection.
++.IP 
++.IP "\fB\-\-trust\-sender\fP"
++Disable the extra validation of the file list from a remote sender (this
++safety feature was added to address the performance downgrade after fixing CVE 2022-29154).
++This should only be done if you trust the sender to not try to do something malicious,
++which should be the case if they're running a stock rsync.
++.IP 
++Normally when pulling files from a remote rsync, the client runs 2 extra
++validation checks:
++.IP 
++.RS 
++.IP o 
++Verify that additional arg items didn't get added at the top of the transfer.
++.IP o 
++Verify that none of the items in the file list should have been excluded.
++.RE
++
++.IP 
++Note that various options can turn off one or both of these checks if the
++option interferes with the validation.  For instance:
++.IP 
++.RS 
++.IP o 
++Using a per\-directory filter file reads filter rules that only the server
++knows about, so the filter checking is disabled.
++.IP o 
++Using the \fB\-\-old\-args\fP option allows the sender to manipulate the
++requested args, so the arg checking is disabled.
++.IP o 
++Reading the files\-from list from the server side means that the client
++doesn't know the arg list, so the arg checking is disabled.
++.IP o 
++Using \fB\-\-read\-batch\fP disables both checks since the batch file's
++contents will have been verified when it was created.
++.RE
++
++.IP 
++This option may help an under\-powered client server if the extra pattern
++matching is slowing things down on a huge transfer.  It can also be used
++to work around a bug in the verification logic, possibly after using the
++\fB\-\-list\-only\fP option combined with \fB\-\-trust\-sender\fP to look
++over the full file list.
+ .IP
+ .IP "\fB\-T, \-\-temp\-dir=DIR\fP"
+ This option instructs rsync to use DIR as a
+--- a/rsync.yo
++++ b/rsync.yo
+@@ -434,6 +434,7 @@
+      --files-from=FILE       read list of source-file names from FILE
+  -0, --from0                 all *from/filter files are delimited by 0s
+  -s, --protect-args          no space-splitting; wildcard chars only
++     --trust-sender          trust the remote sender's file list
+      --address=ADDRESS       bind address for outgoing socket to daemon
+      --port=PORT             specify double-colon alternate port number
+      --sockopts=OPTIONS      specify custom TCP options
+--- a/options.c
++++ b/options.c
+@@ -785,6 +785,7 @@
+   rprintf(F,"     --files-from=FILE       read list of source-file names from FILE\n");
+   rprintf(F," -0, --from0                 all *-from/filter files are delimited by 0s\n");
+   rprintf(F," -s, --protect-args          no space-splitting; only wildcard special-chars\n");
++  rprintf(F,"     --trust-sender          trust the remote sender's file list\n");
+   rprintf(F,"     --address=ADDRESS       bind address for outgoing socket to daemon\n");
+   rprintf(F,"     --port=PORT             specify double-colon alternate port number\n");
+   rprintf(F,"     --sockopts=OPTIONS      specify custom TCP options\n");

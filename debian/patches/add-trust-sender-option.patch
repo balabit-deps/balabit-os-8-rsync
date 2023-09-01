@@ -1,0 +1,129 @@
+Description: Add --trust-sender argument
+ This patch provides the --trust-sender argument which allows users to speed up
+ transfers between machines by trusting the sender beforehand. The new argument
+ is added in options.c, and when set on the command line, marks the
+ trust_sender_args and trust_sender_filter global variables as true. Likewise,
+ the external logic for setting these two variables elsewhere in rsync has been
+ moved to options.c too. Alongside this move, two logical changes have been
+ made. The first is that trust_sender_filter will be true when am_server is
+ true. This means the sender's filtering is trusted when the sender is the
+ local machine. The second logical change is that list_only is no longer
+ considered when deciding to trust the sender's arguments. This is
+ intentional as it defers the decision to trust to the --trust-sender option
+ when working with remote machines.
+Author: Wayne Davison <wayne@opencoder.net>
+Origin: backport, https://github.com/WayneD/rsync/commit/cff8f044776c5143a5b270969d4bb0f1fea8b017
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rsync/+bug/2028810
+Forwarded: not-needed
+Last-Update: 2023-07-28
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/exclude.c
++++ b/exclude.c
+@@ -32,18 +32,15 @@
+ extern int local_server;
+ extern int prune_empty_dirs;
+ extern int ignore_perishable;
+-extern int old_style_args;
+ extern int relative_paths;
+ extern int delete_mode;
+ extern int delete_excluded;
+ extern int cvs_exclude;
+ extern int sanitize_paths;
+ extern int protocol_version;
+-extern int read_batch;
+-extern int list_only;
++extern int trust_sender_args;
+ extern int module_id;
+ 
+-extern char *filesfrom_host;
+ extern char curr_dir[MAXPATHLEN];
+ extern unsigned int curr_dir_len;
+ extern unsigned int module_dirlen;
+@@ -54,6 +51,7 @@
+ filter_rule_list implied_filter_list = { .debug_type = " [implied]" };
+ 
+ int saw_xattr_filter = 0;
++int trust_sender_args = 0;
+ int trust_sender_filter = 0;
+ 
+ /* Need room enough for ":MODS " prefix plus some room to grow. */
+@@ -385,7 +383,7 @@
+ 	int slash_cnt = 0;
+ 	const char *cp;
+ 	char *p;
+-	if (am_server || old_style_args || list_only || read_batch || filesfrom_host != NULL)
++	if (trust_sender_args)
+ 		return;
+ 	if (partial_string_len) {
+ 		arg_len = strlen(arg);
+--- a/main.c
++++ b/main.c
+@@ -79,7 +79,6 @@
+ extern BOOL shutting_down;
+ extern int backup_dir_len;
+ extern int basis_dir_cnt;
+-extern int trust_sender_filter;
+ extern struct stats stats;
+ extern char *stdout_format;
+ extern char *logfile_format;
+@@ -550,7 +549,6 @@
+ #ifdef ICONV_CONST
+ 		setup_iconv();
+ #endif
+-		trust_sender_filter = 1;
+ 	} else if (local_server) {
+ 		/* If the user didn't request --[no-]whole-file, force
+ 		 * it on, but only if we're not batch processing. */
+--- a/options.c
++++ b/options.c
+@@ -27,6 +27,8 @@
+ extern int module_id;
+ extern int local_server;
+ extern int sanitize_paths;
++extern int trust_sender_args;
++extern int trust_sender_filter;
+ extern int daemon_over_rsh;
+ extern unsigned int module_dirlen;
+ extern filter_rule_list filter_list;
+@@ -301,6 +303,7 @@
+ static int daemon_opt;   /* sets am_daemon after option error-reporting */
+ static int omit_dir_times = 0;
+ static int omit_link_times = 0;
++static int trust_sender = 0;
+ static int F_option_cnt = 0;
+ static int modify_window_set;
+ static int itemize_changes = 0;
+@@ -1020,6 +1023,7 @@
+   {"protect-args",    's', POPT_ARG_VAL,    &protect_args, 1, 0, 0},
+   {"no-protect-args",  0,  POPT_ARG_VAL,    &protect_args, 0, 0, 0},
+   {"no-s",             0,  POPT_ARG_VAL,    &protect_args, 0, 0, 0},
++  {"trust-sender",     0,  POPT_ARG_VAL,    &trust_sender, 1, 0, 0},
+   {"numeric-ids",      0,  POPT_ARG_VAL,    &numeric_ids, 1, 0, 0 },
+   {"no-numeric-ids",   0,  POPT_ARG_VAL,    &numeric_ids, 0, 0, 0 },
+   {"usermap",          0,  POPT_ARG_STRING, 0, OPT_USERMAP, 0, 0 },
+@@ -2432,6 +2436,11 @@
+ 		}
+ 	}
+ 
++	if (trust_sender || am_server || read_batch)
++		trust_sender_args = trust_sender_filter = 1;
++	else if (old_style_args || filesfrom_host != NULL)
++		trust_sender_args = 1;
++
+ 	am_starting_up = 0;
+ 
+ 	return 1;
+@@ -2466,9 +2475,9 @@
+ 	char *ret;
+ 	if (!protect_args && old_style_args < 2 && (!old_style_args || (!is_filename_arg && opt != SPLIT_ARG_WHEN_OLD))) {
+ 		const char *f;
+-		if (*arg == '~' && is_filename_arg && !am_sender && !old_style_args
+-				&& ((relative_paths && !strstr(arg, "/./")) 
+-				|| !strchr(arg, '/'))) {
++        if (*arg == '~' && is_filename_arg && !am_sender && !trust_sender_args
++            && ((relative_paths && !strstr(arg, "/./")) 
++            || !strchr(arg, '/'))) {
+ 			extras++;
+ 			escape_leading_tilde = 1;
+ 		}
