@@ -10,9 +10,11 @@ Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/rsync/+bug/2028810
 Last-Update: 2023-09-01
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
---- a/rsync.1
-+++ b/rsync.1
-@@ -517,6 +517,7 @@
+Index: rsync-3.1.3/rsync.1
+===================================================================
+--- rsync-3.1.3.orig/rsync.1
++++ rsync-3.1.3/rsync.1
+@@ -517,6 +517,7 @@ to the detailed description below for a
   \-0, \-\-from0                 all *from/filter files are delimited by 0s
       \-\-old\-args              disable the modern arg-protection idiom
   \-s, \-\-protect\-args          no space\-splitting; wildcard chars only
@@ -20,7 +22,7 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
       \-\-address=ADDRESS       bind address for outgoing socket to daemon
       \-\-port=PORT             specify double\-colon alternate port number
       \-\-sockopts=OPTIONS      specify custom TCP options
-@@ -2104,6 +2105,48 @@
+@@ -2104,6 +2105,48 @@ This option conflicts with the \fB\-\-ol
  .IP
  Note that this option is incompatible with the use of the restricted rsync
  script (`rrsync`) since it hides options from the script's inspection.
@@ -69,9 +71,11 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
  .IP
  .IP "\fB\-T, \-\-temp\-dir=DIR\fP"
  This option instructs rsync to use DIR as a
---- a/rsync.yo
-+++ b/rsync.yo
-@@ -434,6 +434,7 @@
+Index: rsync-3.1.3/rsync.yo
+===================================================================
+--- rsync-3.1.3.orig/rsync.yo
++++ rsync-3.1.3/rsync.yo
+@@ -434,6 +434,7 @@ to the detailed description below for a
       --files-from=FILE       read list of source-file names from FILE
   -0, --from0                 all *from/filter files are delimited by 0s
   -s, --protect-args          no space-splitting; wildcard chars only
@@ -79,9 +83,11 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
       --address=ADDRESS       bind address for outgoing socket to daemon
       --port=PORT             specify double-colon alternate port number
       --sockopts=OPTIONS      specify custom TCP options
---- a/options.c
-+++ b/options.c
-@@ -785,6 +785,7 @@
+Index: rsync-3.1.3/options.c
+===================================================================
+--- rsync-3.1.3.orig/options.c
++++ rsync-3.1.3/options.c
+@@ -785,6 +785,7 @@ void usage(enum logcode F)
    rprintf(F,"     --files-from=FILE       read list of source-file names from FILE\n");
    rprintf(F," -0, --from0                 all *-from/filter files are delimited by 0s\n");
    rprintf(F," -s, --protect-args          no space-splitting; only wildcard special-chars\n");
